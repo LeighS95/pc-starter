@@ -18,7 +18,7 @@ error_message() {
 }
 
 commend_exists() {
-    command -v "$1" &>/dev/null;
+    command -v "$1" 2>&1 >/dev/null;
 }
 
 # Detect OS and Linux Distribution
