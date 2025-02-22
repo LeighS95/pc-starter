@@ -60,6 +60,10 @@ It currently offers setup of the following:
 |Nix                 | ❌      | ✅ | ✅   |
 |Linux Distro default| ❌      | ❌ | ✅   |
 
+|Browsers|Windows|Mac|Linux|
+|--------|-------|---|-----|
+|Chrome  | ✅   | ✅| ✅  |
+
 
 |Language|Windows|Mac |Linux|
 |--------|-------|----|-----|
