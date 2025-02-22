@@ -77,11 +77,18 @@ select_options() {
         echo "$((i+1))) ${options[$i]}"
     done
     read -rp "Enter choices: " choices
+    # for choice in $choices; do
+    #     if (( choice >= 1 && choice <= ${#options[@]} )); then
+    #         selected+=("${options[$((choice-1))]}")
+    #     else
+    #         echo "Invalid option: $choice. Skipping."
+    #     fi
+    # done
     for choice in $choices; do
-        if (( choice >= 1 && choice <= ${#options[@]} )); then
+        if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#options[@]} )); then
             selected+=("${options[$((choice-1))]}")
         else
-            echo "Invalid option: $choice. Skipping."
+            echo "Invalid selection: $choice. Skipping."
         fi
     done
 

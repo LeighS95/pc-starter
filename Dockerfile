@@ -12,4 +12,6 @@ RUN su - testuser
 
 CMD ["bash", "-c", "$(curl -fsSL https://raw.githubusercontent.com/LeighS95/pc-starter/main/run.sh)"]
 
+# docker run --rm -it ubuntu bash
+
 # apt update && apt install -y curl sudo && useradd -m -s /bin/bash testuser && passwd -d testuser && echo "testuser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && su - testuser
