@@ -234,13 +234,20 @@ selected_langs=($selected_langs)
 intall_sdkman() {
     info_message "Installing SDKMAN..."
 
-    # Install unzip
+    # Install unzip & zip
     if ! command_exists unzip; then
         eval "$PKG_MANAGER unzip"
+        source ~/.bashrc || source ~/.zshrc
+        source /etc/profile.d/nix.sh
+    fi
+    if ! command_exists zip; then
+        eval "$PKG_MANAGER zip"
+        source ~/.bashrc || source ~/.zshrc
+        source /etc/profile.d/nix.sh
     fi
     
     # Download and install SDKMAN
-    curl -s "https://get.sdkman.io" | bash || { echo "SDKMAN installation failed!"; exit 1; }
+    curl -s "https://get.sdkman.io" | bash || { echo "SDKMAN installation failed!"; }
 
     # Ensure SDKMAN init script exists before sourcing
     if [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" ]]; then
