@@ -77,9 +77,13 @@ elif [[ "$OS" == "Linux" ]]; then
         case $PACKAGE_MANAGER_CHOICE in
             "Nix")
                 USE_NIX=true
+                # Nix requires xz package
+                if ! command_exists xz; then
+                    sudo apt install -y xz-utils
+                fi
                 if ! command_exists nix; then
                     info_message "Installing Nix package manager..."
-                    curl -L https://nixos.org/nix/install | sh
+                    sh <(curl -L https://nixos.org/nix/install) --daemon
                     . "$HOME/.nix-profile/etc/profile.d/nix.sh"
                     export PATH="$HOME/.nix-profile/bin:$PATH"
                 fi
