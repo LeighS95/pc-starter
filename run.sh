@@ -233,6 +233,11 @@ selected_langs=($selected_langs)
 
 intall_sdkman() {
     info_message "Installing SDKMAN..."
+
+    # Install unzip
+    if ! command_exists unzip; then
+        eval "$PKG_MANAGER unzip"
+    fi
     
     # Download and install SDKMAN
     curl -s "https://get.sdkman.io" | bash || { echo "SDKMAN installation failed!"; exit 1; }
