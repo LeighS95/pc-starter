@@ -92,10 +92,10 @@ elif [[ "$OS" == "Linux" ]]; then
 fi
 
 # Validate package manager selection
-# if ! command_exists brew && ! command_exists nix && ! command_exists apt && ! command_exists dnf && ! command_exists pacman && ! command_exists zypper; then
-#     error_message "No supported package manager found. Exiting."
-#     exit 1
-# fi
+if ! command_exists brew && ! command_exists nix && ! command_exists apt && ! command_exists dnf && ! command_exists pacman && ! command_exists zypper; then
+    error_message "No supported package manager found. Exiting."
+    exit 1
+fi
 
 install_nix() {
     nix profile install "nixpkgs#$1"
@@ -129,9 +129,11 @@ else
     fi
 fi
 
+info_message "Using $PACKAGE_MANAGER_CHOICE"
+
 # Install Chrome
-read -p "Do you want to install Google Chrome? [y/n]: " INTALL_CHROME
-if [[ "$INTALL_CHROME" =~ ^[Yy]$ ]]; then
+read -p "Do you want to install Google Chrome? [y/n]: " INSTALL_CHROME
+if [[ "$INSTALL_CHROME" =~ ^[Yy]$ ]]; then
     info_message "Installing Chrome..."
     if [[ "$USE_NIX" == true ]]; then
         eval "$PKG_MANAGER google-chrome" || { error_message "Chrome installation failed"; exit 1; }
