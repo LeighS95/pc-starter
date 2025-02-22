@@ -290,7 +290,7 @@ for lang in ${selected_langs[@]}; do
             fi
             ;;
         "Ruby")
-            if [[ "$PKG_MANAGER" != "Nix" ]]; then
+            if [[ "$USE_NIX" != true ]]; then
                 if command_exists apt; then
                     eval "$PKG_MANAGER ruby-full"
                 else
@@ -333,7 +333,7 @@ for lang in ${selected_langs[@]}; do
             eval "$PKG_MANAGER erlang"
             ;;
         "Elixir")
-            if [[ "$PKG_MANAGER" != "Nix" ]]; then
+            if [[ "$USE_NIX" != true ]]; then
                 if command_exists apt; then
                     # If ubuntu run:
                     sh <(curl -fsSL https://elixir-lang.org/install.sh)
