@@ -84,8 +84,13 @@ elif [[ "$OS" == "Linux" ]]; then
                 if ! command_exists nix; then
                     info_message "Installing Nix package manager..."
                     sh <(curl -L https://nixos.org/nix/install) --daemon
-                    . "$HOME/.nix-profile/etc/profile.d/nix.sh"
+                    # . "$HOME/.nix-profile/etc/profile.d/nix.sh"
+                    . /etc/profile.d/nix.sh
                     export PATH="$HOME/.nix-profile/bin:$PATH"
+
+                    echo 'export PATH="$HOME/.nix-profile/bin:$PATH"' >> ~/.bashrc
+                    echo 'export PATH="$HOME/.nix-profile/bin:$PATH"' >> ~/.zshrc
+                    source ~/.bashrc || source ~/.zshrc
                 fi
                 break;;
             "Default ($DISTRO)")
