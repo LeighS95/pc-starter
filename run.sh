@@ -114,7 +114,7 @@ if ! command_exists brew && ! command_exists nix && ! command_exists apt && ! co
 fi
 
 install_nix() {
-    sudo -i nix --extra-experimental-features nix-command --extra-experimental-features flakes profile install "nixpkgs#$1"
+    sudo -i NIXPKGS_ALLOW_UNFREE=1 nix --extra-experimental-features nix-command --extra-experimental-features flakes profile install "nixpkgs#$1"
 }
 
 # Set package manager command
@@ -146,9 +146,6 @@ else
 fi
 
 info_message "Using $PACKAGE_MANAGER_CHOICE"
-
-# Allow unfree package to be install during script
-export NIXPKGS_ALLOW_UNFREE=1
 
 # Install Chrome
 read -p "Do you want to install Google Chrome? [y/n]: " INSTALL_CHROME
