@@ -96,7 +96,7 @@ elif [[ "$OS" == "Linux" ]]; then
                     # Enable features
                     info_message "Enabling nix features"
                     mkdir -p ~/.config/nix
-                    echo 'experimental-features = nix-command flakes' >> ~/.config/nix
+                    echo 'experimental-features = nix-command flakes' >> ~/.config/nix.conf
                     source /etc/profile.d/nix.sh || source ~/.nix-profile/etc/profile.d/nix.sh
                 fi
                 break;;
