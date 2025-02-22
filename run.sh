@@ -79,18 +79,25 @@ elif [[ "$OS" == "Linux" ]]; then
                 USE_NIX=true
                 # Nix requires xz package
                 if ! command_exists xz; then
+                    info_message "Installing xz..."
                     sudo apt install -y xz-utils
                 fi
                 if ! command_exists nix; then
                     info_message "Installing Nix package manager..."
                     sh <(curl -L https://nixos.org/nix/install) --daemon
                     # . "$HOME/.nix-profile/etc/profile.d/nix.sh"
+                    info_message "Adding nix to path and updating source..."
                     . /etc/profile.d/nix.sh
                     export PATH="$HOME/.nix-profile/bin:$PATH"
-
                     echo 'export PATH="$HOME/.nix-profile/bin:$PATH"' >> ~/.bashrc
                     echo 'export PATH="$HOME/.nix-profile/bin:$PATH"' >> ~/.zshrc
                     source ~/.bashrc || source ~/.zshrc
+
+                    # Enable features
+                    info_message "Enabling nix features"
+                    mkdir -p ~/.config/nix
+                    echo 'experimental-features = nix-command flakes' >> ~/.config/nix
+                    source /etc/profile.d/nix.sh || source ~/.nix-profile/etc/profile.d/nix.sh
                 fi
                 break;;
             "Default ($DISTRO)")
