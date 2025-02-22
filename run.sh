@@ -147,7 +147,7 @@ if [[ "$INTALL_CHROME" =~ ^[Yy]$ ]]; then
 fi
 
 # Check for git and then Install git
-if ! command_exists git; then
+if command_exists git; then
     info_message "Installing git..."
     if [[ "$USE_NIX" == true ]]; then
         eval "$PKG_MANAGER git"
