@@ -17,7 +17,7 @@ error_message() {
     echo -e "\033[1;31m[ERROR] $1\033[0m"
 }
 
-commend_exists() {
+command_exists() {
     command -v "$1";
 }
 

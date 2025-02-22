@@ -92,10 +92,10 @@ elif [[ "$OS" == "Linux" ]]; then
 fi
 
 # Validate package manager selection
-if ! command_exists brew && ! command_exists nix && ! command_exists apt && ! command_exists dnf && ! command_exists pacman && ! command_exists zypper; then
-    error_message "No supported package manager found. Exiting."
-    exit 1
-fi
+# if ! command_exists brew && ! command_exists nix && ! command_exists apt && ! command_exists dnf && ! command_exists pacman && ! command_exists zypper; then
+#     error_message "No supported package manager found. Exiting."
+#     exit 1
+# fi
 
 install_nix() {
     nix profile install "nixpkgs#$1"
