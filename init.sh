@@ -23,7 +23,6 @@ command_exists() {
 
 # Detect OS and Linux Distribution
 detect_os() {
-    local OS
     if [[ "$OSTYPE" == "darwin"* ]]; then
         OS="Mac"
     elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
