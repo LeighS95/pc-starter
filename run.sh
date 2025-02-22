@@ -97,9 +97,13 @@ if ! command_exists brew && ! command_exists nix && ! command_exists apt && ! co
     exit 1
 fi
 
+install_nix() {
+    nix profile install "nixpkgs#$1"
+}
+
 # Set package manager command
 if [[ "$USE_NIX" == true ]]; then
-    PKG_MANAGER="nix-env -i"
+    PKG_MANAGER="install_nix"
 else
     if [[ "$OS" == "Mac" ]]; then
         PKG_MANAGER="brew install"
