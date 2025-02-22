@@ -70,8 +70,8 @@ detect_arch() {
 
 # Function to display a menu and capture user choices
 select_options() {
-    options=("$@")
-    selected=()
+    local options=("$@")
+    local selected=()
     echo "Select options by entering numbers separated by spaces (e.g., 1 3 5):"
     for i in "${!options[@]}"; do
         echo "$((i+1))) ${options[$i]}"
@@ -80,6 +80,8 @@ select_options() {
     for choice in $choices; do
         if (( choice >= 1 && choice <= ${#options[@]} )); then
             selected+=("${options[$((choice-1))]}")
+        else
+            echo "Invalid option: $choice. Skipping."
         fi
     done
 

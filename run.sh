@@ -191,9 +191,10 @@ else
     tools=("fzf" "jq" "tmux")
 fi
 selected_tools=$(select_options "${tools[@]}")
+selected_tools=($selected_tools) # Convert string to array
 
-info_message "Installing tools - $selected_tools"
-for tool in $selected_tools; do
+info_message "Installing tools - ${selected_tools[*]}"
+for tool in "${selected_tools[@]}"; do
     info_message "Installing $tool..."
     eval "$PKG_MANAGER $tool" || { error_message "$tool installation failed"; exit 1; }
     success_message "Installed $tool!"
@@ -203,9 +204,10 @@ done
 echo "Selecting terminal emulators"
 terminals=("Ghostty" "Kitty")
 selected_terminals=$(select_options "${terminals[@]}")
+selected_terminals=($selected_terminals)
 
-info_message "Installing - $selected_terminals"
-for term in $selected_terminals; do
+info_message "Installing - ${selected_terminals[*]}"
+for term in "${selected_tools[@]}"; do
     info_message "Installing $term"
     case $term in
         "Ghostty")
@@ -227,6 +229,7 @@ done
 echo "Selecting programming languages"
 langs=("Python" "Node" "Rust" "Golang" "Ruby" "Java" "Kotlin" "C" "Cpp" "Zig" "Elixir")
 selected_langs=$(select_options "${langs[@]}")
+selected_langs=($selected_langs)
 
 intall_sdkman() {
     info_message "Installing SDKMAN..."
@@ -257,7 +260,7 @@ intall_sdkman() {
 }
 
 info_message "Installing languages..."
-for lang in $selected_langs; do
+for lang in ${selected_langs[@]}; do
     info_message "Installing $lang..."
     case $lang in
         "Python")
@@ -398,9 +401,10 @@ install_vscode() {
 echo "Selecting IDEs/Text Editors..."
 editors=("Vscode" "Neovim" "Android Studio")
 selected_editors=$(select_options "${editors[@]}")
+selected_editors=($selected_editors)
 
 info_message "Installing IDEs/Text Editors..."
-for editor in $selected_editors; do
+for editor in ${selected_editors[@]}; do
     info_message "Installing $editor..."
     case $editor in
         "Vscode")
@@ -430,9 +434,10 @@ done
 echo "Selecting additional developer tools..."
 dev_tools=("Docker" "Kubernetes CLI" "Terraform" "AWS CLI" "Azure CLI" "GCP SDK" "Github CLI")
 selected_dev_tools=$(select_options "${dev_tools[@]}")
+selected_dev_tools=($selected_dev_tools)
 
 info_message "Installing additional developer tools..."
-for dev_tool in $selected_dev_tools; do
+for dev_tool in ${selected_dev_tools[@]}; do
     info_message "Installing $dev_tool..."
     case $dev_tool in
         "Docker")
