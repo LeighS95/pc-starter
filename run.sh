@@ -178,6 +178,7 @@ if command_exists git; then
         eval "$PKG_MANAGER git"
     else
         eval "$PKG_MANAGER git-all"
+    fi
 else
     info_message "Git is already installed."
 fi
