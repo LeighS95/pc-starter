@@ -27,12 +27,12 @@ else
         echo "Running Curl..."
         curl -fsSL "$REMOTE_UTILS" -o /tmp/init.sh
         CURL_EXIT_CODE=$?  # Capture exit status of curl
-        error_message "Curl failed with exit code $CURL_EXIT_CODE"
+        echo "Curl failed with exit code $CURL_EXIT_CODE"
     elif command -v wget; then
         echo "Running wget"
         wget -q "$REMOTE_UTILS" -O /tmp/init.sh
         WGET_EXIT_CODE=$?  # Capture exit status of wget
-        error_message "Wget failed with exit code $WGET_EXIT_CODE"
+        echo "Wget failed with exit code $WGET_EXIT_CODE"
     else
         echo "Neither curl nor wget is available. Cannot download init.sh."
         exit 1
