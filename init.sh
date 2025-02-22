@@ -18,7 +18,7 @@ error_message() {
 }
 
 commend_exists() {
-    command -v "$1" 2>&1 >/dev/null;
+    command -v "$1";
 }
 
 # Detect OS and Linux Distribution
@@ -83,6 +83,6 @@ select_options() {
             selected+=("${options[$((choice-1))]}")
         fi
     done
-    info_message "Selected: ${selected[@]}"
+
     echo "${selected[@]}"  # Return selected options
 }

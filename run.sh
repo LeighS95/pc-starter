@@ -29,7 +29,7 @@ else
 fi
 
 info_message "Detecting OS and Architecture..."
-detect_OS
+detect_os
 detect_arch
 info_message "Running setup on $OS ($DISTRO $ARCH)..."
 
@@ -41,15 +41,19 @@ if [[ "$OS" == "Mac" ]]; then
         case $PACKAGE_MANAGER_CHOICE in
             "Nix")
                 USE_NIX=true
-                if ! commend_exists nix; then
+                if ! command_exists nix; then
                     info_message "Installing Nix package manager..."
                     curl -L https://nixos.org/nix/install | sh
+                    . "$HOME/.nix-profile/etc/profile.d/nix.sh"
+                    export PATH="$HOME/.nix-profile/bin:$PATH"
                 fi
                 break;;
             "Homebrew")
-                if ! commend_exists brew; then
+                if ! command_exists brew; then
                     info_message "Installing Homebrew..."
                     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+                    eval "$(/opt/homebrew/bin/brew shellenv)"
+                    export PATH="/opt/homebrew/bin:$PATH"
                 fi
                 break;;
             *) error_message "Invalid option. Please select 1 or 2.";;
@@ -61,9 +65,11 @@ elif [[ "$OS" == "Linux" ]]; then
         case $PACKAGE_MANAGER_CHOICE in
             "Nix")
                 USE_NIX=true
-                if ! commend_exists nix; then
+                if ! command_exists nix; then
                     info_message "Installing Nix package manager..."
                     curl -L https://nixos.org/nix/install | sh
+                    . "$HOME/.nix-profile/etc/profile.d/nix.sh"
+                    export PATH="$HOME/.nix-profile/bin:$PATH"
                 fi
                 break;;
             "Default ($DISTRO)")
@@ -71,6 +77,12 @@ elif [[ "$OS" == "Linux" ]]; then
             *) error_message "Invalid option. Please select 1 or 2.";;
         esac
     done
+fi
+
+# Validate package manager selection
+if ! command_exists brew && ! command_exists nix && ! command_exists apt && ! command_exists dnf && ! command_exists pacman && ! command_exists zypper; then
+    error_message "No supported package manager found. Exiting."
+    exit 1
 fi
 
 # Set package manager command
@@ -102,19 +114,24 @@ else
 fi
 
 # Install Chrome
-info_message "Installing Chrome..."
-if [[ "$USE_NIX" == true ]]; then
-    eval "$PKG_MANAGER google-chrome" || { error_message "Chrome installation failed"; exit 1; }
-elif command_exists brew; then
-    eval "$PKG_MANAGER --cask google-chrome" || { error_message "Chrome installation failed"; exit 1; }
-elif command_exists apt; then
-    wget -qO chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && sudo dpkg -i chrome.deb && rm chrome.deb || { error_message "Chrome installation failed"; exit 1; }
-elif command_exists dnf; then
-    sudo dnf install -y https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm || { error_message "Chrome installation failed"; exit 1; }
-elif command_exists pacman; then
-    sudo pacman -S --noconfirm google-chrome || { error_message "Chrome installation failed"; exit 1; }
-else
-    error_message "Chrome installation not supported on this system."
+read -p "Do you want to install Google Chrome? [y/n]: " INTALL_CHROME
+if [[ "$INTALL_CHROME" =~ ^[Yy]$ ]]; then
+    info_message "Installing Chrome..."
+    if [[ "$USE_NIX" == true ]]; then
+        eval "$PKG_MANAGER google-chrome" || { error_message "Chrome installation failed"; exit 1; }
+    elif command_exists brew; then
+        eval "$PKG_MANAGER --cask google-chrome" || { error_message "Chrome installation failed"; exit 1; }
+    elif command_exists apt; then
+        wget -qO chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && sudo dpkg -i chrome.deb && rm chrome.deb || { error_message "Chrome installation failed"; exit 1; }
+    elif command_exists dnf; then
+        sudo dnf install -y https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm || { error_message "Chrome installation failed"; exit 1; }
+    elif command_exists pacman; then
+        sudo pacman -S --noconfirm google-chrome || { error_message "Chrome installation failed"; exit 1; }
+    else
+        error_message "Chrome installation not supported on this system."
+    fi
+
+    success_message "Chrome Installed!"
 fi
 
 # Check for git and then Install git
@@ -137,8 +154,8 @@ else
 fi
 selected_tools=$(select_options "${tools[@]}")
 
-info_message "Installing tools..."
-for tool in $tools; do
+info_message "Installing tools - $selected_tools"
+for tool in $selected_tools; do
     info_message "Installing $tool..."
     eval "$PKG_MANAGER $tool" || { error_message "$tool installation failed"; exit 1; }
     success_message "Installed $tool!"
@@ -149,8 +166,9 @@ echo "Selecting terminal emulators"
 terminals=("Ghostty" "Kitty")
 selected_terminals=$(select_options "${terminals[@]}")
 
-info_message "Installing terminals..."
+info_message "Installing - $selected_terminals"
 for term in $selected_terminals; do
+    info_message "Installing $term"
     case $term in
         "Ghostty")
             if [[ "$PACKAGE_MANAGER" == "homebrew" ]]; then
@@ -158,20 +176,47 @@ for term in $selected_terminals; do
             else
                 eval "$PKG_MANAGER ghostty" || { error_message "ghostty installation failed"; exit 1; }
             fi
-            success_message "Ghostty Installed!"
             ;;
         "Kitty")
             eval "curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin"|| { error_message "Kitty installation failed"; exit 1; }
-
-            success_message "Kitty Installed"
             ;;
     esac
+
+    success_message "$tool Installed!"
 done
 
 # Install programming languages
 echo "Selecting programming languages"
 langs=("Python" "Node" "Rust" "Golang" "Ruby" "Java" "Kotlin" "C" "Cpp" "Zig" "Elixir")
 selected_langs=$(select_options "${langs[@]}")
+
+intall_sdkman() {
+    info_message "Installing SDKMAN..."
+    
+    # Download and install SDKMAN
+    curl -s "https://get.sdkman.io" | bash || { echo "SDKMAN installation failed!"; exit 1; }
+
+    # Ensure SDKMAN init script exists before sourcing
+    if [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" ]]; then
+        source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+        # Add SDKMAN to shell startup files
+        echo 'export SDKMAN_DIR="$HOME/.sdkman"' >> ~/.bashrc
+        echo '[[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]] && source "$SDKMAN_DIR/bin/sdkman-init.sh"' >> ~/.bashrc
+        echo 'export SDKMAN_DIR="$HOME/.sdkman"' >> ~/.zshrc
+        echo '[[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]] && source "$SDKMAN_DIR/bin/sdkman-init.sh"' >> ~/.zshrc
+
+        # Reload shell configuration
+        source ~/.bashrc || source ~/.zshrc
+
+        # Verify installation
+        sdk version || { info_message "SDKMAN installation verification failed!"; }
+
+        success_message "SDKMAN successfully installed and configured!"
+    else
+        error_message "SDKMAN installation failed: Init script not found!"
+    fi
+}
 
 info_message "Installing languages..."
 for lang in $selected_langs; do
@@ -195,29 +240,28 @@ for lang in $selected_langs; do
             eval "$PKG_MANAGER golang-go"
             ;;
         "Ruby")
-            if command -v apt &>/dev/null; then
-                eval "$PKG_MANAGER ruby-full"
+            if [[ "$PKG_MANAGER" != "Nix" ]]; then
+                if command_exists apt; then
+                    eval "$PKG_MANAGER ruby-full"
+                else
+                    eval "$PKG_MANAGER ruby"
+                fi
             else
                 eval "$PKG_MANAGER ruby"
+            fi
             ;;
         "PHP")
             eval "$PKG_MANAGER php"
             ;;
         "Java")
             if ! command_exists sdkman; then
-                echo "Installing sdkman..."
-                eval "curl -s "https://get.sdkman.io" | bash"
-                eval "source "$HOME/.sdkman/bin/sdkman-init.sh""
-                eval "sdk version"
+                intall_sdkman
             fi
             eval "sdk install java" || { echo "Java installation failed"; }
             ;;
         "Kotlin")
             if ! command_exists sdkman; then
-                echo "Installing sdkman..."
-                eval "curl -s "https://get.sdkman.io" | bash"
-                eval "source "$HOME/.sdkman/bin/sdkman-init.sh""
-                eval "sdk version"
+                intall_sdkman
             fi
             eval "sdk install kotlin"|| { echo "Kotlin installation failed"; }
             ;;
@@ -239,14 +283,74 @@ for lang in $selected_langs; do
             eval "$PKG_MANAGER erlang"
             ;;
         "Elixir")
-            # If ubuntu run:
-            # eval "curl -fsSO https://elixir-lang.org/install.sh sh install.sh elixir@1.18.2 otp@27.1.2 installs_dir=$HOME/.elixir-install/installs export PATH=$installs_dir/otp/27.1.2/bin:$PATH export PATH=$installs_dir/elixir/1.18.2-otp-27/bin:$PATH iex"
-            # Else run
-            eval "$PKG_MANAGER elixir"
+            if [[ "$PKG_MANAGER" != "Nix" ]]; then
+                if command_exists apt; then
+                    # If ubuntu run:
+                    sh <(curl -fsSL https://elixir-lang.org/install.sh)
+
+                    # Ensure Elixir and Erlang paths are added to the system PATH
+                    export ELIXIR_INSTALLS_DIR="$HOME/.elixir-install/installs"
+                    export PATH="$ELIXIR_INSTALLS_DIR/otp/27.1.2/bin:$PATH"
+                    export PATH="$ELIXIR_INSTALLS_DIR/elixir/1.18.2-otp-27/bin:$PATH"
+
+                    # Persist PATH changes in ~/.bashrc and ~/.zshrc
+                    echo "export PATH=\"$ELIXIR_INSTALLS_DIR/otp/27.1.2/bin:\$PATH\"" >> ~/.bashrc
+                    echo "export PATH=\"$ELIXIR_INSTALLS_DIR/elixir/1.18.2-otp-27/bin:\$PATH\"" >> ~/.bashrc
+                    echo "export PATH=\"$ELIXIR_INSTALLS_DIR/otp/27.1.2/bin:\$PATH\"" >> ~/.zshrc
+                    echo "export PATH=\"$ELIXIR_INSTALLS_DIR/elixir/1.18.2-otp-27/bin:\$PATH\"" >> ~/.zshrc
+
+                    # Reload shell to apply PATH changes
+                    source ~/.bashrc || source ~/.zshrc
+
+                    # Verify Elixir
+                    if command_exists elixir && command_exists iex; then
+                        success_message "Elixir installed successfully!"
+                        elixir --version
+                    else
+                        error_message "Elixir installation failed!"
+                        exit 1
+                    fi
+                fi
+            else
+                eval "$PKG_MANAGER elixir"
+            fi
             ;;
     esac
     success_message "$lang Installed!"
 done
+
+install_vscode() {
+    if command_exists apt; then
+        info_message "Installing VSCode on Ubuntu/Debian..."
+        
+        # Install prerequisites
+        sudo apt update && sudo apt install -y wget gpg
+
+        # Import Microsoft's GPG key and add the repository
+        wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /usr/share/keyrings/packages.microsoft.gpg > /dev/null
+        echo "deb [arch=amd64 signed-by=/usr/share/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null
+
+        # Install VSCode
+        sudo apt update && sudo apt install -y code || { error_message "VSCode installation failed!"; exit 1; }
+
+    elif command_exists dnf; then
+        info_message "Installing VSCode on Fedora..."
+        sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+        sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/vscode.repo'
+        sudo dnf install -y code || { error_message "VSCode installation failed!"; exit 1; }
+
+    elif command_exists pacman; then
+        info_message "Installing VSCode on Arch Linux..."
+        sudo pacman -Sy --noconfirm code || { error_message "VSCode installation failed!"; exit 1; }
+
+    elif command_exists brew; then
+        info_message "Installing VSCode on macOS..."
+        brew install --cask visual-studio-code || { error_message "VSCode installation failed!"; exit 1; }
+
+    else
+        error_message "VSCode installation not supported on this system. Install it manually from https://code.visualstudio.com/"
+    fi
+}
 
 # Install IDEs and Text Editors
 echo "Selecting IDEs/Text Editors..."
@@ -261,8 +365,7 @@ for editor in $selected_editors; do
             if [[ "$USE_NIX" == true ]]; then
                 eval "$PKG_MANAGER vscode"
             else
-                eval "$PKG_MANAGER code.deb"
-                eval "echo "code code/add-microsoft-repo boolean true" | sudo debconf-set-selections"
+                install_vscode
             fi
             ;;
         "IntelliJ")
