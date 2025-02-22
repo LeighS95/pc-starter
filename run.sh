@@ -6,6 +6,12 @@ if [[ $(id -u) -eq 0 ]]; then
     exit 1
 fi
 
+if ! command -v curl 2>&1 >/dev/null; then
+    echo "Curl no found"
+else
+    echo "curl found"
+fi
+
 # Define local and remote paths for utils.sh
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 LOCAL_UTILS="$SCRIPT_DIR/init.sh"
