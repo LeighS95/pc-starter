@@ -114,7 +114,7 @@ if ! command_exists brew && ! command_exists nix && ! command_exists apt && ! co
 fi
 
 install_nix() {
-    sudo -E nix profile install "nixpkgs#$1"
+    sudo -i nix profile install "nixpkgs#$1"
 }
 
 # Set package manager command
