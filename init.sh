@@ -70,13 +70,13 @@ detect_arch() {
 
 # Function to display a menu and capture user choices
 select_options() {
-    local options=("$@")
-    local selected=()
-    echo "Select options by entering numbers separated by spaces (e.g., 1 3 5):"
-    for i in "${!options[@]}"; do
-        echo "$((i+1))) ${options[$i]}"
-    done
-    read -rp "Enter choices: " choices
+    # local options=("$@")
+    # local selected=()
+    # echo "Select options by entering numbers separated by spaces (e.g., 1 3 5):"
+    # for i in "${!options[@]}"; do
+    #     echo "$((i+1))) ${options[$i]}"
+    # done
+    # read -rp "Enter choices: " choices
     # for choice in $choices; do
     #     if (( choice >= 1 && choice <= ${#options[@]} )); then
     #         selected+=("${options[$((choice-1))]}")
@@ -84,13 +84,27 @@ select_options() {
     #         echo "Invalid option: $choice. Skipping."
     #     fi
     # done
+
+    # echo "${selected[@]}"  # Return selected options
+    local options=("$@")
+    local selected=()
+
+    echo "Select options by entering numbers separated by spaces (e.g., 1 3 5):" >&2
+    for i in "${!options[@]}"; do
+        echo "$((i+1))) ${options[$i]}" >&2
+    done
+
+    read -rp "Enter choices: " choices
+    choices=$(echo "$choices" | tr -s ' ')  # Remove extra spaces
+
     for choice in $choices; do
         if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#options[@]} )); then
             selected+=("${options[$((choice-1))]}")
         else
-            echo "Invalid selection: $choice. Skipping."
+            echo "Invalid selection: $choice. Skipping." >&2
         fi
     done
 
-    echo "${selected[@]}"  # Return selected options
+    # Return only selected values
+    echo "${selected[@]}"
 }
