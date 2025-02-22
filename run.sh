@@ -114,7 +114,7 @@ if ! command_exists brew && ! command_exists nix && ! command_exists apt && ! co
 fi
 
 install_nix() {
-    sudo -i NIXPKGS_ALLOW_UNFREE=1 nix --extra-experimental-features nix-command --extra-experimental-features flakes profile install "nixpkgs#$1"
+    sudo -i NIXPKGS_ALLOW_UNFREE=1 nix --extra-experimental-features nix-command --extra-experimental-features flakes profile install --impure "nixpkgs#$1"
 }
 
 # Set package manager command
@@ -147,20 +147,23 @@ fi
 
 info_message "Using $PACKAGE_MANAGER_CHOICE"
 
+# Allow unfree package to be install during script
+export NIXPKGS_ALLOW_UNFREE=1
+
 # Install Chrome
 read -p "Do you want to install Google Chrome? [y/n]: " INSTALL_CHROME
 if [[ "$INSTALL_CHROME" =~ ^[Yy]$ ]]; then
     info_message "Installing Chrome..."
     if [[ "$USE_NIX" == true ]]; then
-        eval "$PKG_MANAGER google-chrome" || { error_message "Chrome installation failed"; exit 1; }
+        eval "$PKG_MANAGER google-chrome" || { error_message "Chrome installation failed"; }
     elif command_exists brew; then
-        eval "$PKG_MANAGER --cask google-chrome" || { error_message "Chrome installation failed"; exit 1; }
+        eval "$PKG_MANAGER --cask google-chrome" || { error_message "Chrome installation failed"; }
     elif command_exists apt; then
-        wget -qO chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && sudo dpkg -i chrome.deb && rm chrome.deb || { error_message "Chrome installation failed"; exit 1; }
+        wget -qO chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && sudo dpkg -i chrome.deb && rm chrome.deb || { error_message "Chrome installation failed"; }
     elif command_exists dnf; then
-        sudo dnf install -y https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm || { error_message "Chrome installation failed"; exit 1; }
+        sudo dnf install -y https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm || { error_message "Chrome installation failed"; }
     elif command_exists pacman; then
-        sudo pacman -S --noconfirm google-chrome || { error_message "Chrome installation failed"; exit 1; }
+        sudo pacman -S --noconfirm google-chrome || { error_message "Chrome installation failed"; }
     else
         error_message "Chrome installation not supported on this system."
     fi
@@ -257,21 +260,25 @@ for lang in $selected_langs; do
     info_message "Installing $lang..."
     case $lang in
         "Python")
-            eval "$PKG_MANAGER python3.6"
+            eval "$PKG_MANAGER python3"
             ;;
         "Node")
             # eval "$PKG_MANAGER nodejs"
             eval "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash"
-            eval "source ./bashrc"
+            eval "source ./.bashrc"
             eval "nvm install --lts"
             ;;
         "Rust")
             eval "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
-            eval "source ./bashrc"
+            eval "source ./.bashrc"
             eval "rustup update"
             ;;
         "Golang")
-            eval "$PKG_MANAGER golang-go"
+            if [[ "$USE_NIX" == true ]]; then
+                eval "$PKG_MANAGER go"
+            else
+                eval "$PKG_MANAGER golang-go"
+            fi
             ;;
         "Ruby")
             if [[ "$PKG_MANAGER" != "Nix" ]]; then
@@ -303,7 +310,7 @@ for lang in $selected_langs; do
             eval "$PKG_MANAGER gcc" || { echo "GCC installation failed"; }
             ;;
         "Cpp")
-            eval "$PKG_MANAGER g++" || { echo "G++ installation failed"; }
+            eval "$PKG_MANAGER gcc" || { echo "G++ installation failed"; }
             ;;
         "Zig")
             if [[ "$USE_NIX" == true ]]; then
@@ -388,7 +395,7 @@ install_vscode() {
 
 # Install IDEs and Text Editors
 echo "Selecting IDEs/Text Editors..."
-editors=("Vscode" "IntelliJ" "Neovim" "Android Studio")
+editors=("Vscode" "Neovim" "Android Studio")
 selected_editors=$(select_options "${editors[@]}")
 
 info_message "Installing IDEs/Text Editors..."
@@ -402,14 +409,16 @@ for editor in $selected_editors; do
                 install_vscode
             fi
             ;;
-        "IntelliJ")
-            eval "$PKG_MANAGER intellij-idea-community"
-            ;;
         "Neovim")
             eval "$PKG_MANAGER neovim"
             ;;
         "Android Studio")
-            echo "Not supported yet"
+            if [[ "$USE_NIX" != true ]]; then
+                echo "Not supported yet"
+            else
+                eval "$PKG_MANAGER android-tools"
+                eval "$PKG_MANAGER android-studio-stable"
+            fi
             ;;
     esac
 
@@ -422,32 +431,94 @@ dev_tools=("Docker" "Kubernetes CLI" "Terraform" "AWS CLI" "Azure CLI" "GCP SDK"
 selected_dev_tools=$(select_options "${dev_tools[@]}")
 
 info_message "Installing additional developer tools..."
-for tool in $selected_dev_tools; do
-    info_message "Installing $tool..."
-    case $tool in
+for dev_tool in $selected_dev_tools; do
+    info_message "Installing $dev_tool..."
+    case $dev_tool in
         "Docker")
-            eval "$PKG_MANAGER docker"
+            if [[ "$USE_NIX" == true ]]; then
+                eval "$PKG_MANAGER docker"
+            else
+                warn_message "Currently unsupported"
+            fi
             ;;
         "Kubernetes CLI")
-            eval "$PKG_MANAGER kubectl"
+            if [[ "$USE_NIX" == true || "$OS" == "Mac" ]]; then
+                eval "$PKG_MANAGER kubectl"
+            else
+                warn_message "Not currently supported"
+                # curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+
+                # curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256"
+
+                # echo "$(cat kubectl.sha256)  kubectl" | sha256sum --check
+
+                # sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+                # kubectl version --client
             ;;
         "Terraform")
-            eval "$PKG_MANAGER terraform"
+            if [[ "$USE_NIX" == true ]]; then
+                eval "$PKG_MANAGER terraform"
+            elif [[ "$OS" == "Mac" ]]; then
+                brew tap hashicorp/tap
+                brew install hashicorp/tap/terraform
+                brew update
+                brew upgrade hashicorp/tap/terraform
+            else
+                warn_message "Currently unsupported"
+            fi
             ;;
         "AWS CLI")
-            eval "$PKG_MANAGER awscli"
+            if [[ "$USE_NIX" == true ]]; then
+                eval "$PKG_MANAGER awscli2"
+            else
+                if [[ "$OS" == "Mac" ]]; then
+                    curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
+                    sudo installer -pkg ./AWSCLIV2.pkg -target /
+                else
+                    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                    unzip awscliv2.zip
+                    sudo ./aws/install
+                fi
+            fi
             ;;
         "Azure CLI")
-            eval "$PKG_MANAGER awscli"
+            if [[ "$USE_NIX" == true || "$OS" == "Mac" ]]; then
+                eval "$PKG_MANAGER azure-cli"
+            else
+                curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+            fi
             ;;
         "GCP SDK")
-            eval "$PKG_MANAGER awscli"
+            if [[ "$USE_NIX" == true ]]; then
+                eval "$PKG_MANAGER google-cloud-sdk"
+            elif command_exists apt; then
+                info_message "Installing prerequisites..."
+
+                sudo apt-get install apt-transport-https ca-certificates gnupg
+
+                info_message "Importing the Google Cloud public key..."
+
+                curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+
+                info_message "Adding the gcloud CLI distribution URI as a package source..."
+
+                echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+                
+                info_message "Installing cli..."
+
+                sudo apt-get update && sudo apt-get install google-cloud-cli
+            else
+                curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-linux-x86_64.tar.gz
+                tar -xf google-cloud-cli-linux-x86_64.tar.gz
+                ./google-cloud-sdk/install.sh
+            fi
             ;;
         "Github CLI")
             eval "$PKG_MANAGER gh"
             ;;
     esac
-    success_message "$editor Installed!"
+    success_message "$dev_tool Installed!"
 done
  
 success_message "Installation complete"
