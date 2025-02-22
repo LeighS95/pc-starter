@@ -20,6 +20,9 @@ Then cd to localation of repo and then run:
 
 ## To run Remotely
 
+### Prerequisites
+ - curl or wget
+
 ### Windows (Powershell)
 
 ```powershell
