@@ -23,9 +23,9 @@ if [[ -f "$LOCAL_UTILS" ]]; then
     source "$LOCAL_UTILS"
 else
     echo "Downloading init.sh from remote..."
-    if ! command -v curl 2>&1 >/dev/null; then
+    if ! command -v curl; then
         curl -fsSL "$REMOTE_UTILS" -o /tmp/init.sh || { echo "Failed to download init.sh"; exit 1; }
-    elif ! command -v wget 2>&1 >/dev/null; then
+    elif ! command -v wget; then
         wget -q "$REMOTE_UTILS" -O /tmp/init.sh || { echo "Failed to download init.sh"; exit 1; }
     else
         echo "Neither curl nor wget is available. Cannot download init.sh."
